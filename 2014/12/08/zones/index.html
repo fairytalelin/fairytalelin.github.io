@@ -4,14 +4,16 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>test | claylin</title>
+    <title>zones | claylin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="claylin">
     
-    <meta name="description" content="this is a new start pointer in my life
-first let me start some java codes 
-12345public class Student{  int age;  String name;  String sex;}">
+    <meta name="description" content="linux内存管理区
+
+因为硬件的限制，linux内核没有把所有的物理页面归做一类。由于有些页面的的内存物理地址不能够用作一些任务，linux内核把物理页面划分为3个不同的管理区。linux内核安页面拥有不同的属性来进行分类。特别地，linux必须处理内存地址对应的两个硬件缺陷：
+
+一些硬件设备只能">
     
     
     
@@ -67,14 +69,14 @@ first let me start some java codes
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2014/12/07/test/" title="test" itemprop="url">test</a>
+      <a href="/2014/12/08/zones/" title="zones" itemprop="url">zones</a>
   </h1>
   <p class="article-author">By
        
 		<a href="http://fairytalelin.github.io/about" title="claylin" target="_blank" itemprop="author">claylin</a>
 		
   <p class="article-time">
-    <time datetime="2014-12-07T11:03:27.000Z" itemprop="datePublished"> Published Dec 7 2014</time>
+    <time datetime="2014-12-08T10:47:06.000Z" itemprop="datePublished"> Published Dec 8 2014</time>
     
   </p>
 </header>
@@ -83,14 +85,23 @@ first let me start some java codes
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">Contents</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#linux内存管理区"><span class="toc-number">1.</span> <span class="toc-text">linux内存管理区</span></a></li></ol>
 		
 		</div>
 		
-		<p>this is a <strong>new start pointer</strong> in my life</p>
-<p>first let me start some java codes </p>
-<figure class="highlight {java}"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">class</span> Student{</div><div class="line">  <span class="keyword">int</span> age;</div><div class="line">  String name;</div><div class="line">  String sex;</div><div class="line">}</div></pre></td></tr></table></figure>
-
+		<h1 id="linux内存管理区">linux内存管理区</h1>
+<hr>
+<p>因为硬件的限制，linux内核没有把所有的物理页面归做一类。由于有些页面的的内存物理地址不能够用作一些任务，linux内核把物理页面划分为3个不同的管理区。linux内核安页面拥有不同的属性来进行分类。特别地，linux必须处理内存地址对应的两个硬件缺陷：</p>
+<ul>
+<li>一些硬件设备只能够在一些特定的物理地址执行DMA(直接内存传送)操作</li>
+<li>一些处理器架构能够比实际映射更多的物理地址，由此导致一些内存不能够永久地映射到内核地址空间</li>
+</ul>
+<p>由于以上的种种限制，linux把物理内存划分为以下三种管理区：</p>
+<ul>
+<li><strong>ZONE_DMA</strong> 包含能够执行DMA操作的物理页面</li>
+<li><strong>ZONE_NORMAL</strong> 包含常规地址映射的物理页面</li>
+<li><strong>ZONE_HIGHMEM</strong> 包含高端地址的物理页面，不可以永久映射到linux内核地址空间</li>
+</ul>
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -98,13 +109,13 @@ first let me start some java codes
 
 <div class="article-categories">
   <span></span>
-  <a class="article-category-link" href="/categories/first-day/">first day</a>►<a class="article-category-link" href="/categories/first-day/note/">note</a>►<a class="article-category-link" href="/categories/first-day/note/others/">others</a>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
 </div>
 
 
   <div class="article-tags">
   
-  <span></span> <a href="/tags/start-point/">start point</a><a href="/tags/myself/">myself</a><a href="/tags/note/">note</a>
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/内存管理/">内存管理</a><a href="/tags/zones/">zones</a><a href="/tags/ZONE-DMA/">ZONE_DMA</a><a href="/tags/ZONE-NORMAL/">ZONE_NORMAL</a><a href="/tags/ZONE-HIGHMEM/">ZONE_HIGHMEM</a>
   </div>
 
 </div>
@@ -112,7 +123,7 @@ first let me start some java codes
 
 <div class="article-share" id="share">
 
-  <div data-url="http://fairytalelin.github.io/2014/12/07/test/" data-title="test | claylin" data-tsina="null" class="share clearfix">
+  <div data-url="http://fairytalelin.github.io/2014/12/08/zones/" data-title="zones | claylin" data-tsina="null" class="share clearfix">
   </div>
 
 </div>
@@ -127,7 +138,7 @@ first let me start some java codes
   <div id="toc" class="toc-aside">
   <strong class="toc-title">Contents</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#linux内存管理区"><span class="toc-number">1.</span> <span class="toc-text">linux内存管理区</span></a></li></ol>
  
   </div>
 
@@ -140,11 +151,7 @@ first let me start some java codes
 	<p class="asidetitle">Categories</p>
 		<ul>
 		
-			<li><a href="/categories/first-day/" title="first day">first day<sup>1</sup></a></li>
-		
-			<li><a href="/categories/first-day/note/" title="note">note<sup>1</sup></a></li>
-		
-			<li><a href="/categories/first-day/note/others/" title="others">others<sup>1</sup></a></li>
+			<li><a href="/categories/linux/" title="linux">linux<sup>1</sup></a></li>
 		
 		</ul>
 </div>
@@ -155,11 +162,17 @@ first let me start some java codes
 	<p class="asidetitle">Tags</p>
 		<ul class="clearfix">
 		
-			<li><a href="/tags/note/" title="note">note<sup>1</sup></a></li>
+			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
 		
-			<li><a href="/tags/myself/" title="myself">myself<sup>1</sup></a></li>
+			<li><a href="/tags/ZONE-NORMAL/" title="ZONE_NORMAL">ZONE_NORMAL<sup>1</sup></a></li>
 		
-			<li><a href="/tags/start-point/" title="start point">start point<sup>1</sup></a></li>
+			<li><a href="/tags/ZONE-DMA/" title="ZONE_DMA">ZONE_DMA<sup>1</sup></a></li>
+		
+			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
+		
+			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>1</sup></a></li>
+		
+			<li><a href="/tags/linux/" title="linux">linux<sup>1</sup></a></li>
 		
 		</ul>
 </div>
