@@ -9,6 +9,10 @@
     
     <meta name="author" content="claylin">
     
+    <meta name="description" content="地址转换
+内存管理系统提供两个重要的功能:代码保护和地址转换。代码保护措施可以防止一个任务访问另外一个任务或操作系统的内存区域；地址转换能够让操作系统在给任务分配内存时具有灵活性，其物理地址映射机制可以可以达到内存的保护功能，可以说代码保护功能是建立在地址变换机制上的。
+我们知道计算机的内存是字节的">
+    
     
     
     
@@ -79,15 +83,43 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">Contents</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#地址转换"><span class="toc-number">1.</span> <span class="toc-text">地址转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分段机制"><span class="toc-number">2.</span> <span class="toc-text">分段机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分页机制"><span class="toc-number">3.</span> <span class="toc-text">分页机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
 		
 		</div>
 		
-		  
+		<h2 id="地址转换">地址转换</h2>
+<p>内存管理系统提供两个重要的功能:代码保护和地址转换。代码保护措施可以防止一个任务访问另外一个任务或操作系统的内存区域；地址转换能够让操作系统在给任务分配内存时具有灵活性，其物理地址映射机制可以可以达到内存的保护功能，可以说代码保护功能是建立在地址变换机制上的。</p>
+<p>我们知道计算机的内存是字节的线性数组，每个字节有一个唯一物理地址。程序中的地址是由两部分构成的逻辑地址，逻辑地址并不能够用来直接访问物理地址，需要通过地址变换机制转换为物理地址。地址变换通常以内存块作为操作的基本单位。分段机制和分页机制是两种广泛的地址映射技术。</p>
+<p>在80x86系统内，从逻辑地址到物理地址变换的过程使用了分段和分页两种机制。第一阶段使用分段机制把程序的逻辑地址变换为处理器可寻址的线性地址；第二个阶段使用分页机制把线性地址转换为物理地址。在地址变换阶段中，第二个阶段的分页机制是可选的。如果没用开启分页机制，那么分段机制的转化结果线性地址将直接映射到物理地址。下图是地址转换过程的示意图：</p>
+<p><img src="/img/虚拟地址到物理地址的转换.png" alt="虚拟地址到物理地址的转换"></p>
+<hr>
+<h2 id="分段机制">分段机制</h2>
+<p>分段机制提供了把处理器可寻址的线性地址空间划分为一些大小不固定的成为段的受保护的逻辑地址空间。段用来存放程序的代码、数据和堆栈，或者存放系统数据结构(如TTS任务状态段、LDT本地描述符表和GDT全局描述符表)。多任务处理器为每个程序分配私有的一套段。这样使得多个程序可以运行在同一个处理器上而不会相互干扰。分页机制为传统需求业、虚拟内存系统提供了实现机制。其中虚拟内存系统用于实现程序代码按需被映射到物理内存里，可以实现大程序的运行。当然分页机制也提供多任务之间的隔离措施。</p>
+<p>系统中所有使用的段都包含在处理器线性地址空间中。要定位段中的一个字节，程序必须提供一个逻辑地址。逻辑地址包括一个段选择符和一个偏移量。段选择符是一个段的唯一标识。逻辑地址的便宜了部分加到段的基地址上就可以定位段中的某个字节的位置。</p>
+<p>线性地址空间和物理地址空间具有相同的结构。虚拟地址(逻辑地址)空间包含最多16K的段，每个段最长可达4GB(逻辑地址共48位),使得虚拟地址空间容量达到64TB。如果禁用分页机制，那么线性地址就是可访问的物理地址。</p>
+<hr>
+<h2 id="分页机制">分页机制</h2>
+<p>在实际应用中，程序的大小往往比物理内存要大得多，这时就需要使用一种虚拟化线性地址空间的方法，也就是虚拟存储技术。虚拟存储是一种内存管理技术，它使得程序猿产生内存空间要比计算机实际物理内存的大多的错觉，从而可以允许任意大的程序在计算机上运行无需考虑实际的内存大小。</p>
+<p>分页机制支持虚拟存储技术。在虚拟存储实现中，物理内存和硬盘组成整个虚拟存储空间，每个段被划分成大小固定的页面(通常大小为4KB)，页面会分配在物理内存中或硬盘中。操作系统通过存储在物理内存中的页表维护页面。每个进程都有各自的页表。</p>
+<p>如果访问的页面不在物理内存中，处理器会发生缺页中断，从硬盘上读取需要的页面，并重新执行。</p>
+<hr>
+<h2 id="总结">总结</h2>
+<p>分段和分页是两种不同的地址变换机制，对地址变换的操作都是独立的。尽管都是使用存储在内存中的表辅助完成的，但是所使用的表结构并不相同。描述段的表为GDT全局描述表和LDT局部描述表，其其存储在处理器寻址的线性地址空间中；页表存储在物理空间中。</p>
+  
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
 
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/内存管理/">内存管理</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/内存管理/">内存管理</a><a href="/tags/分段/">分段</a><a href="/tags/分页/">分页</a>
+  </div>
 
 </div>
 
@@ -122,7 +154,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">Contents</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#地址转换"><span class="toc-number">1.</span> <span class="toc-text">地址转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分段机制"><span class="toc-number">2.</span> <span class="toc-text">分段机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分页机制"><span class="toc-number">3.</span> <span class="toc-text">分页机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
  
   </div>
 
@@ -137,6 +169,8 @@
 		
 			<li><a href="/categories/linux/" title="linux">linux<sup>1</sup></a></li>
 		
+			<li><a href="/categories/内存管理/" title="内存管理">内存管理<sup>1</sup></a></li>
+		
 			<li><a href="/categories/linux/翻译/" title="翻译">翻译<sup>1</sup></a></li>
 		
 		</ul>
@@ -148,6 +182,12 @@
 	<p class="asidetitle">Tags</p>
 		<ul class="clearfix">
 		
+			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>2</sup></a></li>
+		
+			<li><a href="/tags/分页/" title="分页">分页<sup>1</sup></a></li>
+		
+			<li><a href="/tags/分段/" title="分段">分段<sup>1</sup></a></li>
+		
 			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ZONE-NORMAL/" title="ZONE_NORMAL">ZONE_NORMAL<sup>1</sup></a></li>
@@ -155,8 +195,6 @@
 			<li><a href="/tags/ZONE-DMA/" title="ZONE_DMA">ZONE_DMA<sup>1</sup></a></li>
 		
 			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
-		
-			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>1</sup></a></li>
 		
 			<li><a href="/tags/linux/" title="linux">linux<sup>1</sup></a></li>
 		
