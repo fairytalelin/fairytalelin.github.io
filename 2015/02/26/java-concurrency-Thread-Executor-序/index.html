@@ -4,17 +4,13 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>zones | claylin</title>
+    <title>java concurrency Thread Executor 序 | claylin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="claylin">
     
-    <meta name="description" content="linux内存管理区
-
-原文地址
-因为硬件的限制，linux内核没有把所有的物理页面归做一类。由于有些页面的的内存物理地址不能够用作一些任务，linux内核把物理页面划分为3个不同的管理区。linux内核安页面拥有不同的属性来进行分类。特别地，linux必须处理内存地址对应的两个硬件缺陷：
-
-一些硬">
+    <meta name="description" content="java concurrency Executor概述
+从java 5开始,java并发api就提供了Executor框架，把任务的创建和任务的执行分开。使用executor，我们仅仅需要实现Runnable接口并把它提交给executor处理即可。executor框架负责任务的执行。并且不仅仅如此">
     
     
     
@@ -70,14 +66,14 @@
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2014/12/08/zones/" title="zones" itemprop="url">zones</a>
+      <a href="/2015/02/26/java-concurrency-Thread-Executor-序/" title="java concurrency Thread Executor 序" itemprop="url">java concurrency Thread Executor 序</a>
   </h1>
   <p class="article-author">By
        
 		<a href="http://fairytalelin.github.io/about" title="claylin" target="_blank" itemprop="author">claylin</a>
 		
   <p class="article-time">
-    <time datetime="2014-12-08T10:47:06.000Z" itemprop="datePublished"> Published Dec 8 2014</time>
+    <time datetime="2015-02-26T11:56:22.000Z" itemprop="datePublished"> Published Feb 26 2015</time>
     
   </p>
 </header>
@@ -86,77 +82,31 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">Contents</strong>
 		
-			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#linux内存管理区"><span class="toc-number">1.</span> <span class="toc-text">linux内存管理区</span></a></li></ol>
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#java_concurrency_Executor概述"><span class="toc-number">1.</span> <span class="toc-text">java concurrency Executor概述</span></a></li></ol>
 		
 		</div>
 		
-		<h1 id="linux内存管理区">linux内存管理区</h1>
-<hr>
-<p><a href="http://www.makelinux.net/books/lkd2/ch11lev1sec2" target="_blank" rel="external">原文地址</a></p>
-<p>因为硬件的限制，linux内核没有把所有的物理页面归做一类。由于有些页面的的内存物理地址不能够用作一些任务，linux内核把物理页面划分为3个不同的管理区。linux内核安页面拥有不同的属性来进行分类。特别地，linux必须处理内存地址对应的两个硬件缺陷：</p>
+		<h2 id="java_concurrency_Executor概述">java concurrency Executor概述</h2>
+<p>从java 5开始,java并发api就提供了Executor框架，把任务的创建和任务的执行分开。使用executor，我们仅仅需要实现Runnable接口并把它提交给executor处理即可。executor框架负责任务的执行。并且不仅仅如此，通过使用线程池来提高运行效率。当我们把一个任务交给executor处理时，executor首先会在thread pool中寻找可用的Thread，这样可以避免创建新的Thread对象，从而节约时间，加快任务的执行。</p>
+<p>Executor框架的另外一个好处是其提供了Callable接口。Callable接口和Runnable借口类似，但是Callable提供以下2个改进:</p>
 <ul>
-<li>一些硬件设备只能够在一些特定的物理地址执行DMA(直接内存传送)操作</li>
-<li>一些处理器架构能够比实际映射更多的物理地址，由此导致一些内存不能够永久地映射到内核地址空间</li>
+<li>Callable接口主要的方法是call()，并且此方法可以返回一个数据类型</li>
+<li>当把一个实现Callable接口的对象交给一个executor对象处理时，executor对象会返回一个实现Future接口的对象。通过对此对象的操作来控制Callable任务执行的状态和结果。</li>
 </ul>
-<p>由于以上的种种限制，linux把物理内存划分为以下三种管理区：</p>
-<ul>
-<li><strong>ZONE_DMA</strong> 包含能够执行DMA操作的物理页面</li>
-<li><strong>ZONE_NORMAL</strong> 包含常规地址映射的物理页面</li>
-<li><strong>ZONE_HIGHMEM</strong> 包含高端地址的物理页面，不可以永久映射到linux内核地址空间</li>
-</ul>
-<p>这些管理区在头文件<strong>linux/mmzone.h</strong>中定义</p>
-<p>内存管理区实际的使用和布局是架构独立的。例如，一些处理器架构在任务物理地址都可以执行DMA操作。在这些处理器中，ZONE_DMA是空的并且ZONE_NORMAL可以任意使用而不用管其用途。相反，在x86处理器架构中，ISA设备不能够在全32为地址空间执行DMA操作，因为ISA设备只能够读取16MB的物理地址。所以在x86上的ZONE_DMA由物理地址0～16MB区间构成。</p>
-<p>ZONE_HIGHMEM和ZONE_NORMAL一样根据处理器架构的不同而不同。在x86上，ZONE_HEIGMEM在物理地址&gt;896MB的区间。在其他的架构上，ZONE_HIGHMEM是空的因为所有内存是直接映射的。在ZONE_HIGHMEM中的物理地址叫做高端地址，剩下地址叫做低端地址。</p>
-<p>ZONE_NORMAL更趋向定义为前两个内存管理区划分后的剩下的内存空间。譬如在x86上，ZONE_NORMAL的物理内存区间划分在16MB~896MB。其他的处理去架构则是所有可用的内存。下表列出了在x86上每个管理区的物理页分配情况。</p>
-<table>
-<thead>
-<tr>
-<th><strong>ZONE</strong></th>
-<th><strong>Description</strong></th>
-<th>Physical Memory</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ZONE_DMA</td>
-<td>DMA-able pages</td>
-<td>&lt; 16MB</td>
-</tr>
-<tr>
-<td>ZONE_NORMAL</td>
-<td>Normally addressable pages</td>
-<td>16896MB</td>
-</tr>
-<tr>
-<td>ZONE_HIGHMEM</td>
-<td>Dynamically mapped pages</td>
-<td>&gt;896MB</td>
-</tr>
-</tbody>
-</table>
-<p>linux把系统页面划分为不同的管理区来用池的管理概念按需求分配页面。譬如ZONE_DMA管理区赋予了内核满足DMA功能的内存分配能力。如果有这样的内存需求，内核就简单地从ZONE_DMA把请求的页面数分配出去即可。需注意的是管理区没有任何的内存物理相关性质依赖，它们仅仅是linux内核用来追踪页面的一种逻辑分类。</p>
-<p>虽然一些应用可能需要指定管理区的页面，在一些应用中，管理区的指定并非是强制性的。虽然对可以执行DMA操作的内存分配必须来自ZONE_DMA，但是低端的内存分配可以来自ZONE_DMA和ZONE_NORMAL。当然，linux内核更喜欢把ZONE_NORMAL区中的页面分配给低端需求，分配ZONE_DMA管理区的内存分配给直接传送的应用。但是如果分配过于频繁，实际上应该分配自低端区的空间，linux内核将会不区分管理区。</p>
-<p>在<strong>linux/mmzone.h</strong>中用struct zone定义管理区：</p>
-<figure class="highlight <C>"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> zone{</div><div class="line">  spinlock_t             lock;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          free_pages;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          pages_min;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          pages_low;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          pages_high;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          protection[MAX_NR_ZONES];</div><div class="line">  spinlock_t             lru_lock;</div><div class="line">  <span class="keyword">struct</span> list_head       active_list;</div><div class="line">  <span class="keyword">struct</span> list_head       inactive_list;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          nr_scan_active;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          nr_scan_inactive;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          nr_active;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          nr_inactive;</div><div class="line">  <span class="keyword">int</span>                    all_unreclaimable;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          pages_scanned;</div><div class="line">  <span class="keyword">int</span>                    temp_priority;</div><div class="line">  <span class="keyword">int</span>                    prev_priority;</div><div class="line">  <span class="keyword">struct</span> free_area       free_area[MAX_ORDER];</div><div class="line">  wait_queue_head_t      *wait_table;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          wait_table_size;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          wait_table_bits;</div><div class="line">  <span class="keyword">struct</span> per_cpu_pageset pageset[NR_CPUS];</div><div class="line">  <span class="keyword">struct</span> pglist_data     *zone_pgdat;</div><div class="line">  <span class="keyword">struct</span> page            *zone_mem_map;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          zone_start_pfn;</div><div class="line">  <span class="keyword">char</span>                   *name;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          spanned_pages;</div><div class="line">  <span class="keyword">unsigned</span> <span class="keyword">long</span>          present_pages;</div><div class="line">};</div></pre></td></tr></table></figure>
+<p>下图是java concurrency api中executor框架中类和接口的uml图：<br><img src="/img/executor.png" alt="executor uml图"></p>
+<p>下面是接口Executor的实现代码</p>
+<figure class="highlight <java>"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">interface</span> Executor{</div><div class="line">  <span class="keyword">void</span> execute(Runnable command);</div><div class="line">}</div></pre></td></tr></table></figure>
 
-<p>zone结构体很是大，但是系统中只有3种管理区，所以只有三个这样的结构体，下面让我们分析一些重要的字段：</p>
-<p><strong>lock</strong>字段是一个自旋锁，用来保护结构在多线程并发获取时引起的问题。需要注意的是自旋锁自保护这个管理区结构体，而非在这个管理区的页面。虽然内核的部分可能锁定保护在管理区页面的数据，但是没有明确的锁保护个别物理页面。</p>
-<p><strong>free_pages</strong>字段是一个管理区中可用的物理页面数量，如果可能的话，内核尽可能地至少保持有pages_min个空闲页面。</p>
-<p><strong>name</strong>字段毫无疑问是一个管理区的以NULL结尾的字符串名字。内核在引导期间(mm/page_alloc.c)初始化管理区的名字，同时三个管理区分别命名为”DMA”,”Normal”和”HighMem”。</p>
+<p>下一篇将一一介绍上图类和接口的使用。</p>
   
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
 
-<div class="article-categories">
-  <span></span>
-  <a class="article-category-link" href="/categories/linux/">linux</a>►<a class="article-category-link" href="/categories/linux/翻译/">翻译</a>
-</div>
-
 
   <div class="article-tags">
   
-  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/内存管理/">内存管理</a><a href="/tags/zones/">zones</a><a href="/tags/ZONE-DMA/">ZONE_DMA</a><a href="/tags/ZONE-NORMAL/">ZONE_NORMAL</a><a href="/tags/ZONE-HIGHMEM/">ZONE_HIGHMEM</a>
+  <span></span> <a href="/tags/java/">java</a><a href="/tags/concurrency/">concurrency</a><a href="/tags/Executor/">Executor</a>
   </div>
 
 </div>
@@ -164,7 +114,7 @@
 
 <div class="article-share" id="share">
 
-  <div data-url="http://fairytalelin.github.io/2014/12/08/zones/" data-title="zones | claylin" data-tsina="null" class="share clearfix">
+  <div data-url="http://fairytalelin.github.io/2015/02/26/java-concurrency-Thread-Executor-序/" data-title="java concurrency Thread Executor 序 | claylin" data-tsina="null" class="share clearfix">
   </div>
 
 </div>
@@ -174,13 +124,21 @@
 <nav class="article-nav clearfix">
  
  <div class="prev" >
- <a href="/2015/01/10/内存分段与分页/" title="内存分段与分页">
+ <a href="/2015/02/26/java-concurrency-Thread-Executor-ExecutorService/" title="java concurrency Thread Executor-ExecutorService">
   <strong>上一篇：</strong><br/>
   <span>
-  内存分段与分页</span>
+  java concurrency Thread Executor-ExecutorService</span>
 </a>
 </div>
 
+
+<div class="next">
+<a href="/2015/02/26/hash-table中获取hash-code的方法/"  title="hash table中获取hash code的方法">
+ <strong>下一篇：</strong><br/> 
+ <span>hash table中获取hash code的方法
+</span>
+</a>
+</div>
 
 </nav>
 
@@ -192,7 +150,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">Contents</strong>
  
- <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#linux内存管理区"><span class="toc-number">1.</span> <span class="toc-text">linux内存管理区</span></a></li></ol>
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#java_concurrency_Executor概述"><span class="toc-number">1.</span> <span class="toc-text">java concurrency Executor概述</span></a></li></ol>
  
   </div>
 
