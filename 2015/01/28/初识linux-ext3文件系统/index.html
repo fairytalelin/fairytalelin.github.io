@@ -9,6 +9,9 @@
     
     <meta name="author" content="claylin">
     
+    <meta name="description" content="引言
+linux中允许众多不同的文件系统,如ext2,ext3,vfat等。通过使用同一套文件I/O系统调用即可对linux中任意文件进行操作而无需考虑其所在具体文件系统格式;更进一步，对文件的操作可以跨文件系统而执行。如图一所示,我们可以使用cp命令从vfat文件系统格式的硬盘拷贝数据到ext3文">
+    
     
     
     
@@ -79,11 +82,34 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">Contents</strong>
 		
-			
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#引言"><span class="toc-number">1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VFS数据结构"><span class="toc-number">2.</span> <span class="toc-text">VFS数据结构</span></a></li></ol>
 		
 		</div>
 		
-		  
+		<h2 id="引言">引言</h2>
+<p>linux<br>中允许众多不同的文件系统,如ext2,ext3,vfat等。通过使用同一套文件I/O系统调用即可对linux中任意文件进行操作而无需考虑其所在具体文件系统格式;更进一步，对文件的操作可以跨文件系统而执行。如图一所示,我们可以使用cp命令从vfat文件系统格式的硬盘拷贝数据到ext3文件系统格式的硬盘;而这样的操作涉及到2个不同的文件系统。</p>
+<p><img src="http://www.ibm.com/developerworks/cn/linux/l-cn-vfs/1.jpg" alt="图1.跨文件系统的文件操作"></p>
+<p>“一切皆是文件”是unix/linux的基本哲学之一。不仅普通的文件,目录、字符设备、块设备、套接字等在unix/linux中都是一文件被对待的;它们虽然类型不同，但是对其提供的却是同一套调用接口。</p>
+<p><img src="http://www.ibm.com/developerworks/cn/linux/l-cn-vfs/2.jpg" alt="图2.一切皆是文件"></p>
+<p>虚拟文件系统正是实现上述两点linux特性的关键所在。虚拟文件系统(Virtual<br>File System,简称<br>VFS),是linux内核中的一个软件层。用于给用户空间的程序提供文件系统接口；同时,它也提供了内核中的一个抽象功能，允许不同的文件系统共存。</p>
+<p>为了能够支持各种实际文件系统,VFS定义了所有文件系统都支持的基本操作、概念上的借口和数据结构；同时实际文件系统必须实现VFS中所有接口和数据结构。这样,从用户程序的角度来看,所有的文件系统都是一样的。</p>
+<p><img src="http://www.ibm.com/developerworks/cn/linux/l-cn-vfs/3.jpg" alt="图3.VFS在内核中与其它内核中模块的协同关系"></p>
+<h2 id="VFS数据结构">VFS数据结构</h2>
+<ul>
+<li>从本质上看,文件系统是特殊的数据分层存储结构，其包含有文件、目录和相关的控制信息。对此,linux中分别引入下面这些基本概念:<blockquote>
+<p><strong>文件:</strong>一组在逻辑上具有完整意义的信息项系列，处普通文件，其他诸如目录、设备、套接字等也是文件。<br><strong>目录:</strong>目录类似文件夹，用来容纳相关文件。由于目录可以包含子目录，所以目录是层层嵌套进而形成路径。在linux中，目录也是以文件形式存储的。<br><strong>目录项:</strong>在一个文件路径中，路径中的每一部分都被称为目录项;如路径/home/source/node.js中，目录/,home,source和node.js都是一个目录项。<br><strong>索引节点:</strong>用于存储文件的元数据的一个数据结构。文件的元数据就是描述文件相关的信息，和文件本身是两个概念。它包含的是诸如文件大小、拥有者、创建时间、磁盘位置等和文件相关的信息。<br><strong>超级块:</strong>用于存储文件系统的控制信息的数据结构。描述文件系统的状态、文件系统类型、大小、区块数、索引节点等,存放于磁盘的特定扇区中。</p>
+</blockquote>
+</li>
+</ul>
+<p>上述概念在磁盘中的位置关系如下</p>
+<p><img src="http://www.ibm.com/developerworks/cn/linux/l-cn-vfs/4.jpg" alt="图4.磁盘与文件系统"></p>
+<p>关于文件系统的三个容易混淆的概念:</p>
+<ul>
+<li><strong>创建:</strong>以某种方式格式化磁盘的过程，在其上创建一个文件系统。创建文件系统时,会在磁盘特定的位置上写入关于该文件系统的控制信息</li>
+<li><strong>注册:</strong>向内核报告，申明自己被内核支持。一般是在编译内核的时候注册;也可以加载模块的方式手动注册。注册过程实际上是把表示各实际文件系统的数据结构struct<br>file_system实例化</li>
+<li><strong>安装:</strong>也就是我们熟悉的mount操作,将文件系统加入到linux的根文件系统的目录树结构上，这样文件系统才能被访问</li>
+</ul>
+  
 	</div>
 		<footer class="article-footer clearfix">
 <div class="article-catetags">
@@ -130,7 +156,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">Contents</strong>
  
- 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#引言"><span class="toc-number">1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VFS数据结构"><span class="toc-number">2.</span> <span class="toc-text">VFS数据结构</span></a></li></ol>
  
   </div>
 
@@ -164,21 +190,25 @@
 		
 			<li><a href="/tags/linux/" title="linux">linux<sup>2</sup></a></li>
 		
-			<li><a href="/tags/concurrency/" title="concurrency">concurrency<sup>2</sup></a></li>
-		
 			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>2</sup></a></li>
 		
+			<li><a href="/tags/concurrency/" title="concurrency">concurrency<sup>2</sup></a></li>
+		
 			<li><a href="/tags/exception/" title="exception">exception<sup>1</sup></a></li>
+		
+			<li><a href="/tags/基础知识/" title="基础知识">基础知识<sup>1</sup></a></li>
 		
 			<li><a href="/tags/分页/" title="分页">分页<sup>1</sup></a></li>
 		
 			<li><a href="/tags/分段/" title="分段">分段<sup>1</sup></a></li>
 		
-			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
+			<li><a href="/tags/网络/" title="网络">网络<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ZONE-NORMAL/" title="ZONE_NORMAL">ZONE_NORMAL<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ZONE-DMA/" title="ZONE_DMA">ZONE_DMA<sup>1</sup></a></li>
+		
+			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ExecutorService/" title="ExecutorService">ExecutorService<sup>1</sup></a></li>
 		
@@ -186,13 +216,9 @@
 		
 			<li><a href="/tags/ssh/" title="ssh">ssh<sup>1</sup></a></li>
 		
-			<li><a href="/tags/网络/" title="网络">网络<sup>1</sup></a></li>
-		
 			<li><a href="/tags/Executor/" title="Executor">Executor<sup>1</sup></a></li>
 		
-			<li><a href="/tags/基础知识/" title="基础知识">基础知识<sup>1</sup></a></li>
-		
-			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
+			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
 		
 		</ul>
 </div>
