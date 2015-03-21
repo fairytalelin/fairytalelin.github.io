@@ -4,17 +4,16 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>java concurrency Thread Executor-ExecutorService | claylin</title>
+    <title>学习ExecutorService | claylin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="claylin">
     
-    <meta name="description" content="java concurrency并发api Executorservice源码分析
-先看看Executor中的各个类和接口关系图，如下
+    <meta name="description" content="先看看Executor中的各个类和接口关系图，如下
 
 从上图可知，ExecutorService继承于Executor接口。官网是这样介绍这两个接口的：
 
-An Executor that provides meth">
+An Executor that provides methods to manage termination and methodsthat ">
     
     
     
@@ -70,7 +69,7 @@ An Executor that provides meth">
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2015/02/26/java-concurrency-Thread-Executor-ExecutorService/" title="java concurrency Thread Executor-ExecutorService" itemprop="url">java concurrency Thread Executor-ExecutorService</a>
+      <a href="/2015/02/26/java-concurrency-Thread-Executor-ExecutorService/" title="学习ExecutorService" itemprop="url">学习ExecutorService</a>
   </h1>
   <p class="article-author">By
        
@@ -86,41 +85,23 @@ An Executor that provides meth">
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">Contents</strong>
 		
-			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#java_concurrency并发api_Executorservice源码分析"><span class="toc-number">1.</span> <span class="toc-text">java concurrency并发api Executorservice源码分析</span></a></li></ol>
+			
 		
 		</div>
 		
-		<h2 id="java_concurrency并发api_Executorservice源码分析">java concurrency并发api Executorservice源码分析</h2>
+		<hr>
 <p>先看看Executor中的各个类和接口关系图，如下</p>
 <p><img src="/img/executor.png" alt="Executor框架类图"></p>
 <p>从上图可知，ExecutorService继承于Executor接口。官网是这样介绍这两个接口的：</p>
 <blockquote>
-<p>An Executor that provides methods to manage termination and methods<br>that can produce a Future for tracking progress of one or more<br>asynchronous tasks.<br>An ExecutorService can be shut down, which will cause it to reject new<br>tasks. Two different methods are provided for shutting down an<br>ExecutorService. The shutdown() method will allow previously submitted<br>tasks to execute before terminating, while the shutdownNow() method<br>prevents waiting tasks from starting and attempts to stop currently<br>executing tasks. Upon termination, an executor has no tasks actively<br>executing, no tasks awaiting execution, and no new tasks can be<br>submitted. An unused ExecutorService should be shut down to allow<br>reclamation of its resources.</p>
-<p>Method submit extends base method Executor.execute(java.lang.Runnable)<br>by creating and returning a Future that can be used to cancel execution<br>and/or wait for completion. Methods invokeAny and invokeAll perform the<br>most commonly useful forms of bulk execution, executing a collection of<br>tasks and then waiting for at least one, or all, to complete. (Class<br>ExecutorCompletionService can be used to write customized variants of<br>these methods.)</p>
-<p>The Executors class provides factory methods for the executor services<br>provided in this package.</p>
+<p>An Executor that provides methods to manage termination and methods<br>that can produce a Future for tracking progress of one or more<br>asynchronous tasks.<br><strong>Executor提供管结束异步任务的方法,同时提供一个方法生成Future对象,此对象用来追踪一个或者多个异步任务的运行状况。</strong><br>An ExecutorService can be shut down, which will cause it to reject new<br>tasks.<br><strong>通过关闭ExecutorService,可以拒绝接受新的任务。</strong><br>Two different methods are provided for shutting down an<br>ExecutorService.<br><strong>其中提供了2个不同的方法来关闭ExecutorService。</strong><br>The shutdown() method will allow previously submitted<br>tasks to execute before terminating, while the shutdownNow() method<br>prevents waiting tasks from starting and attempts to stop currently<br>executing tasks.<br><strong>shutdown方法允许在ExecutorService关闭之前完成已提交的任务,然而shutdownNow方法阻止正在等待的任务,并且尝试着停止正在运行的任务</strong><br>Upon termination, an executor has no tasks actively<br>executing, no tasks awaiting execution, and no new tasks can be<br>submitted.<br><strong>一旦终止了服务,将没有任务在executor中执行,没有任务等待executor的执行,也没有任务提交。</strong><br>An unused ExecutorService should be shut down to allow<br>reclamation of its resources.<br><strong>不在使用的executorService对象将被关闭同时java虚拟机将回收其资源。</strong></p>
+<p>Method submit extends base method Executor.execute(java.lang.Runnable)<br>by creating and returning a Future that can be used to cancel execution<br>and/or wait for completion.<br><strong>submit方法继承于Executor.execute方法,其通过创建和返回一个Future的实现对象来管理任务的执行,例如取消任务的执行和等待任务的完成。</strong><br>Methods invokeAny and invokeAll perform the<br>most commonly useful forms of bulk execution, executing a collection of<br>tasks and then waiting for at least one, or all, to complete.<br><strong>方法invokeAny和invokeAll用来执行一个多个任务,invokeAny方法的调用将会阻塞当前线程,直至执行的线程里面有一个线程执行完则返回。</strong><br><strong>而invokeAll方法则阻塞等待所有任务执行完。</strong><br>(Class ExecutorCompletionService can be used to write customized variants of<br>these methods.)<br>(ExecutorCompletionService是用来实现用户自定义以上方法的基本类。)</p>
+<p>The Executors class provides factory methods for the executor services<br>provided in this package.<br><strong>Executors提供创建接口ExecutorService不同实现的工厂方法。</strong></p>
 </blockquote>
-<p>下面是ExecutorService中定义的方法</p>
+<p>i<strong>下面是ExecutorService中定义的方法</strong></p>
 <figure class="highlight (java)"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ExecutorService</span> <span class="keyword">extends</span> <span class="title">Executor</span></span>{</div><div class="line">  <span class="keyword">void</span> shutdown();</div><div class="line"></div><div class="line">  List&lt;Runnable&gt; shutdown();</div><div class="line"></div><div class="line">  <span class="keyword">boolean</span> isShutdown();</div><div class="line"></div><div class="line">  <span class="keyword">boolean</span> isTerminated();</div><div class="line"></div><div class="line">  <span class="keyword">boolean</span> awaitTermination(<span class="keyword">long</span> timeout, TimeUnit unit)</div><div class="line">          <span class="keyword">throws</span> InterruptedException;</div><div class="line">  &lt;T&gt; Future&lt;T&gt; submit(Callable&lt;T&gt; task);</div><div class="line"></div><div class="line">  &lt;T&gt; Future&lt;T&gt; submit(Runnable task, T result);</div><div class="line"></div><div class="line">  Future&lt;?&gt; submit(Runnable task);</div><div class="line"></div><div class="line">  &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)</div><div class="line">          <span class="keyword">throws</span> InterruptedException;</div><div class="line"></div><div class="line">  &lt;T&gt; List&lt;Future&lt;T&gt;&gt; invokeAll(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,</div><div class="line">                                    <span class="keyword">long</span> timeout, TimeUnit unit)</div><div class="line">                                            <span class="keyword">throws</span> InterruptedException;</div><div class="line">  &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks)</div><div class="line">              <span class="keyword">throws</span> InterruptedException, ExecutionException;</div><div class="line">  &lt;T&gt; T invokeAny(Collection&lt;? extends Callable&lt;T&gt;&gt; tasks,</div><div class="line">                          <span class="keyword">long</span> timeout, TimeUnit unit)</div><div class="line">                                  <span class="keyword">throws</span> InterruptedException,</div><div class="line">                                  ExecutionException, TimeoutException;</div><div class="line">}</div></pre></td></tr></table></figure>
 
-<p>Executor.submit方法是提交有返回值的任务，上面我们介绍过，Executor提供了2个新的特性Callable和Future这两个接口。Callable的任务对象执行后会返回一个结果,把Callable的对象交给Executor对象处理，Executor则会返回一个Future对象，Future对象控制着任务的执行状态和结果。在Executor中这个处理Callable任务对象的方法就是submit，而execute方法则接受Runnable任务对象，无返回值。</p>
-<p>当然上面说了submit有两种参数形式，另外一个参数是接受一个Runnable对象和一个表示任务运行结果的对象result。那么是怎么实现无返回值得Runnable使其有返回值的呢？</p>
-<p>在Executors类中提供了解决方案。在Executors中有个内部类RunnableAdapter，其采用适配器的设计模式使得Runnable对象转换为Callable对象，下面贴出其实现代码:</p>
-<figure class="highlight (java)"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">static</span> final class <span class="type">RunnableAdapter</span>&lt;T&gt; implements <span class="type">Callable</span>&lt;T&gt;{</div><div class="line">  final <span class="type">Runnable</span> task;</div><div class="line">  final T <span class="literal">result</span>;</div><div class="line">  <span class="type">RunnableAdapter</span>(<span class="type">Runnable</span> task,T <span class="literal">result</span>){</div><div class="line">    this.task = task;</div><div class="line">    this.<span class="literal">result</span> = <span class="literal">result</span>;</div><div class="line">  }</div><div class="line"></div><div class="line">  public T call(){</div><div class="line">    task.run();</div><div class="line">    <span class="keyword">return</span> <span class="literal">result</span>;</div><div class="line">  }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>抽象类AbstractExecutorService提供了对接口ExectuorSeivece方法的默认实现。此类实现了方法invokeAny,invokeAll,这两个方法以RunnableFuture作为方法参数，RunnableFuture对象是由方法newTaskFor提供的，而且是接口RunnableFuture的FutureTask的实现类。子类可能通过重写方法newTaskFor来提供不同的RunnableFuture接口的实现。</p>
-<p>下面给出一个继承于ThreadPoolExecutor类的自定义使用框架，此类使用了自定义的RunnableFuture实现类，而非默认的FutureTask:</p>
-<figure class="highlight (java)"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CustomThreadPoolThread</span> <span class="keyword">extends</span> <span class="title">ThreadPoolExecutor</span></span>{</div><div class="line">  <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">CustomTask</span>&lt;<span class="title">V</span>&gt; <span class="keyword">implements</span> <span class="title">RunnableFuture</span>&lt;<span class="title">V</span>&gt;</span>{}</div><div class="line"></div><div class="line">  <span class="keyword">protected</span> &lt;V&gt;RunnableFuture&lt;V&gt; newTaskFor(Callable&lt;V&gt; c){</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> CustomeTask&lt;V&gt;(c);</div><div class="line">  }</div><div class="line"></div><div class="line">  <span class="keyword">protected</span> &lt;V&gt;RunnableFuture&lt;V&gt; newTaskFor(Runnable r,V v){</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> CustomTask&lt;V&gt;(r,v);</div><div class="line">  }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>我们知道Executorservice提供了三种不同的任务交付方法invoke、submit和execute。其中以invoke提交的方法是同步的，而以submit和execute提交的方法是异步的，submit和execute的不同上面已经提到是一个返回结果，一个不返回结果。</p>
-<p>所谓异步就是主线程work thread在运行了executor.execute(Runnable task)或executor.submit(Callable task)后不会阻塞，会接着往下运行。同步则相反，work thread会因等待task完成而阻塞。</p>
-<p>submit方法会返回一个Future接口的实现对象，用来操控任务执行的状态和结果。在我们需要获取执行任务的结果时，我们可以调用Future对象的get方法，这个方法会阻塞当前的执行的线程，直至任务线程执行完成。下面是submit的默认实现代码：</p>
-<figure class="highlight (java)"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">public &lt;T&gt; <span class="type">Future</span>&lt;T&gt; submit(<span class="type">Runnable</span> task,T <span class="literal">result</span>){</div><div class="line">  <span class="keyword">if</span>(task == null) throw new <span class="type">NullPointerException</span>();</div><div class="line">  <span class="type">RunnableFuture</span>&lt;T&gt; ftask = newTaskFork(task, <span class="literal">result</span>);</div><div class="line">  execute(ftask);</div><div class="line">  <span class="keyword">return</span> ftask;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>invoke系列方法实现的方法也是通过Future对象来实现同步操作的，invokeAny方法是执行一堆任务，如果一个完成，则取消其他未执行完的任务，主要实现代码</p>
-<figure class="highlight (java)"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> &lt;T&gt; doInvokeAny(Collection&lt;? <span class="keyword">extends</span> Callable&lt;T&gt; tasks,</div><div class="line">                        <span class="keyword">boolean</span> timed,<span class="keyword">long</span> nanos&gt;)</div><div class="line">    <span class="keyword">throws</span> InterruptedException,ExcecutionException,TimedoutException{</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(tasks == <span class="keyword">null</span>)</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">    <span class="keyword">int</span> ntasks = tasks.<span class="keyword">size</span>();</div><div class="line">    <span class="keyword">if</span> (ntasks == <span class="number">0</span>)</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</div><div class="line">    List&lt;Future&lt;T&gt;&gt; futures = <span class="keyword">new</span> ArrayList&lt;Future&lt;T&gt;&gt;(ntasks);</div><div class="line">    ExecutorCompletionService&lt;T&gt; ecs =</div><div class="line">      <span class="keyword">new</span> ExecutorCompletionService&lt;T&gt;(<span class="keyword">this</span>);</div><div class="line">    <span class="comment">//For efficiency,especially in executors with liimted</span></div><div class="line">    <span class="comment">//parallelism,check to see if previously submitted tasks are</span></div><div class="line">    <span class="comment">//done before submittting more of them.This interleaving</span></div><div class="line">    <span class="comment">//plus the exception mechanica account for messiness of main</span></div><div class="line">    <span class="comment">//loop</span></div><div class="line">    <span class="keyword">try</span>{</div><div class="line">      <span class="comment">//Record exceptions so that if we fail to obtain any</span></div><div class="line">      <span class="comment">//result,we can throw the last exception we got</span></div><div class="line">      ExecutorException ee = <span class="keyword">null</span>;</div><div class="line">      <span class="keyword">long</span> lastTime = timed ? System.nanoTime() : <span class="number">0</span>;</div><div class="line">      Iterator&lt;? <span class="keyword">extends</span> Callable&lt;T&gt;&gt; it = tasks.iterator();</div><div class="line"></div><div class="line">      <span class="comment">//Start one task for sure; the rest incrementally</span></div><div class="line">      futures.add(ecs.submit(it.<span class="keyword">next</span>()));</div><div class="line">      --ntasks;</div><div class="line">      <span class="keyword">int</span> active = <span class="number">1</span>;</div><div class="line">      <span class="keyword">for</span>(;;){</div><div class="line">        Future&lt;T&gt; f = ecs.poll();<span class="comment">//返回完成的任务</span></div><div class="line">        <span class="keyword">if</span>(f == <span class="keyword">null</span>){</div><div class="line">          <span class="keyword">if</span>(ntasks &gt; <span class="number">0</span>){</div><div class="line">            --ntasks;</div><div class="line">            futures.add(ecs.submit(it.<span class="keyword">next</span>()));</div><div class="line">            ++active;</div><div class="line">          }</div><div class="line">          <span class="keyword">else</span> <span class="keyword">if</span>(active == <span class="number">0</span>)</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">          <span class="keyword">else</span> <span class="keyword">if</span>(timed){</div><div class="line">            f = ecs.pool(nanos,TimeUnit.NANOSECONDS);</div><div class="line">            <span class="keyword">if</span>(f==<span class="keyword">null</span>)</div><div class="line">              <span class="keyword">throw</span> <span class="keyword">new</span> TimeOutException();</div><div class="line">            <span class="keyword">long</span> now = System.nanoTime();</div><div class="line">            nanos -= now -lastTime();</div><div class="line">            lastTime = now;</div><div class="line">          }</div><div class="line">          <span class="keyword">else</span></div><div class="line">            f = ecs.take();</div><div class="line">        }</div><div class="line">        <span class="keyword">if</span>(f != <span class="keyword">null</span>){</div><div class="line">          --active;</div><div class="line">          <span class="keyword">try</span>{</div><div class="line">            <span class="keyword">return</span> f.get();</div><div class="line">          }<span class="keyword">catch</span> (ExecutionException eex){</div><div class="line">            ee = eex;</div><div class="line">          }<span class="keyword">catch</span> (RuntimeException rex){</div><div class="line">            ee = <span class="keyword">new</span> ExecutionException();</div><div class="line">          }</div><div class="line">        }</div><div class="line">      }</div><div class="line">      <span class="keyword">if</span>(ee == <span class="keyword">null</span>)</div><div class="line">        ee = <span class="keyword">new</span> ExecutionException();</div><div class="line">      <span class="keyword">throw</span> ee;</div><div class="line">    }<span class="keyword">finally</span>{</div><div class="line">      <span class="keyword">for</span>(Future&lt;T&gt; f : futures)</div><div class="line">        f.cancel(<span class="keyword">true</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>从上面代码可以看到使用了ExecutorCompletionService类，此类是对CompletionService接口的实现。</p>
-<p>下篇将学习AbstractExecutorSercice的具体实现类。</p>
+<p><strong>下一篇将学习ExecutorService的具体实现和每个方法的具体应用。</strong></p>
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -137,7 +118,7 @@ An Executor that provides meth">
 
 <div class="article-share" id="share">
 
-  <div data-url="http://fairytalelin.github.io/2015/02/26/java-concurrency-Thread-Executor-ExecutorService/" data-title="java concurrency Thread Executor-ExecutorService | claylin" data-tsina="null" class="share clearfix">
+  <div data-url="http://fairytalelin.github.io/2015/02/26/java-concurrency-Thread-Executor-ExecutorService/" data-title="学习ExecutorService | claylin" data-tsina="null" class="share clearfix">
   </div>
 
 </div>
@@ -146,6 +127,14 @@ An Executor that provides meth">
 	
 <nav class="article-nav clearfix">
  
+ <div class="prev" >
+ <a href="/2015/03/17/Linux-常用命令/" title="Linux 常用命令">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Linux 常用命令</span>
+</a>
+</div>
+
 
 <div class="next">
 <a href="/2015/02/26/java-concurrency-Thread-Executor-序/"  title="java concurrency Thread Executor 序">
@@ -165,7 +154,7 @@ An Executor that provides meth">
   <div id="toc" class="toc-aside">
   <strong class="toc-title">Contents</strong>
  
- <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#java_concurrency并发api_Executorservice源码分析"><span class="toc-number">1.</span> <span class="toc-text">java concurrency并发api Executorservice源码分析</span></a></li></ol>
+ 
  
   </div>
 
@@ -199,25 +188,21 @@ An Executor that provides meth">
 		
 			<li><a href="/tags/linux/" title="linux">linux<sup>2</sup></a></li>
 		
-			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>2</sup></a></li>
-		
 			<li><a href="/tags/concurrency/" title="concurrency">concurrency<sup>2</sup></a></li>
 		
-			<li><a href="/tags/exception/" title="exception">exception<sup>1</sup></a></li>
+			<li><a href="/tags/内存管理/" title="内存管理">内存管理<sup>2</sup></a></li>
 		
-			<li><a href="/tags/基础知识/" title="基础知识">基础知识<sup>1</sup></a></li>
+			<li><a href="/tags/exception/" title="exception">exception<sup>1</sup></a></li>
 		
 			<li><a href="/tags/分页/" title="分页">分页<sup>1</sup></a></li>
 		
 			<li><a href="/tags/分段/" title="分段">分段<sup>1</sup></a></li>
 		
-			<li><a href="/tags/网络/" title="网络">网络<sup>1</sup></a></li>
+			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ZONE-NORMAL/" title="ZONE_NORMAL">ZONE_NORMAL<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ZONE-DMA/" title="ZONE_DMA">ZONE_DMA<sup>1</sup></a></li>
-		
-			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
 		
 			<li><a href="/tags/ExecutorService/" title="ExecutorService">ExecutorService<sup>1</sup></a></li>
 		
@@ -225,9 +210,13 @@ An Executor that provides meth">
 		
 			<li><a href="/tags/ssh/" title="ssh">ssh<sup>1</sup></a></li>
 		
+			<li><a href="/tags/网络/" title="网络">网络<sup>1</sup></a></li>
+		
 			<li><a href="/tags/Executor/" title="Executor">Executor<sup>1</sup></a></li>
 		
-			<li><a href="/tags/ZONE-HIGHMEM/" title="ZONE_HIGHMEM">ZONE_HIGHMEM<sup>1</sup></a></li>
+			<li><a href="/tags/基础知识/" title="基础知识">基础知识<sup>1</sup></a></li>
+		
+			<li><a href="/tags/zones/" title="zones">zones<sup>1</sup></a></li>
 		
 		</ul>
 </div>
